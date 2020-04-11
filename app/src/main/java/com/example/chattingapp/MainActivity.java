@@ -3,18 +3,13 @@ package com.example.chattingapp;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
-import android.app.ActionBar;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -67,21 +62,37 @@ public class MainActivity extends AppCompatActivity {
 
                 for(QueryDocumentSnapshot doc : value){
                     ArrayList<String> messages = (ArrayList<String>)doc.getData().get("messages");
+                    ArrayList<Integer> layoutMessages = getMessageIds(layout);
+                    int numMessages = 0;
                     for(String message : messages){
-                        createSentBubble(message);
+                        numMessages ++;
+                        if( ! layoutMessages.contains(createMessageId(numMessages))){
+                            createSentBubble(message, numMessages);
+                        }
                     }
                 }
             }
         });
     }
 
-    public void createSentBubble(String message){
+    public ArrayList<Integer> getMessageIds(LinearLayout messageLayout){
+        ArrayList<Integer> layoutMessages = new ArrayList<>();
+        int numMessages = messageLayout.getChildCount();
+        for(int i = 0; i < numMessages; i++){
+            layoutMessages.add(messageLayout.getChildAt(i).getId());
+        }
+
+        return layoutMessages;
+    }
+
+    public void createSentBubble(String message, int id){
         TextView view = new TextView(layout.getContext());
 
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         layoutParams.weight = 1.0f;
         layoutParams.gravity = Gravity.BOTTOM|Gravity.RIGHT;
 
+        view.setId(createMessageId(id));
         view.setText(message);
         view.setTextColor(Color.WHITE);
         view.setTextSize(18);
@@ -90,6 +101,15 @@ public class MainActivity extends AppCompatActivity {
         view.setLayoutParams(layoutParams);
 
         layout.addView(view);
+    }
+
+    public int createMessageId(int id){
+        int sum = 0;
+        char[] message = "message".toCharArray();
+        for(char letter : message){
+            sum += letter;
+        }
+        return sum + id;
     }
 
     public void sendMessage(View view){
