@@ -3,96 +3,120 @@ package com.example.chattingapp;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class MainActivity extends AppCompatActivity {
 
-    private FirebaseAuth firebaseAuth;
+    private static final int SIGN_IN_REQUEST_CODE = 0;
     private FirebaseFirestore db;
-
-    private TextView messageBox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        firebaseAuth = FirebaseAuth.getInstance();
-        signInUser();
+        setContentView(R.layout.home_screen);
 
         db = FirebaseFirestore.getInstance();
-
-        messageBox = findViewById(R.id.messageBox);
+        startUser();
     }
 
-    public void sendMessage(View view){
-        EditText editText = findViewById(R.id.editText);
-        Map<String, String> data = new HashMap<>();
-        data.put("message", editText.getText().toString());
-        db.collection("messages")
-                .add(data)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        System.out.println("Added message");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        System.out.println("Failed to add message");
-                    }
-                });
-        editText.setText("");
-        getMessages();
+    public void startUser(){
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if(currentUser == null){
+            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().build(), SIGN_IN_REQUEST_CODE);
+        }
+        else{
+            Toast.makeText(this, "Welcome " + currentUser.getDisplayName(), Toast.LENGTH_LONG).show();
+            createHomeScreen(currentUser);
+        }
     }
 
-    public void getMessages(){
-        db.collection("messages")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if(task.isSuccessful()){
-                            String messages = "";
-                            for(QueryDocumentSnapshot document : task.getResult()){
-                                messages += document.getData() + "\n";
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == SIGN_IN_REQUEST_CODE){
+            if(resultCode == RESULT_OK){
+                Toast.makeText(this, "Successfully signed in. Welcome!", Toast.LENGTH_LONG).show();
+                createHomeScreen(FirebaseAuth.getInstance().getCurrentUser());
+            }
+            else{
+                Toast.makeText(this, "We couldn't sign you in. Please try again later.", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+    }
+
+    public void createHomeScreen(FirebaseUser currentUser){
+        String uid = currentUser.getUid();
+        LinearLayout friendListLayout = findViewById(R.id.friendListLayout);
+        populateFriendList(friendListLayout, uid);
+    }
+
+    public void populateFriendList(final LinearLayout layout, String uid){
+        db.collection(uid).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    for(QueryDocumentSnapshot doc : task.getResult()){
+                        final String friendId = doc.getId();
+
+                        TextView view = new TextView(layout.getContext());
+                        view.setText(friendId);
+                        view.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(MainActivity.this, MessagesActivity.class);
+                                intent.putExtra("FRIEND_ID", friendId);
+                                startActivity(intent);
                             }
-                            messageBox.setText(messages);
-                        }
+                        });
+                        view.setTextColor(Color.BLACK);
+                        view.setTextSize(18);
+                        view.setPadding(20, 10, 20, 10);
+
+                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+                        view.setLayoutParams(layoutParams);
+
+                        layout.addView(view);
                     }
-                });
+                }
+            }
+        });
     }
 
-    public void signInUser(){
-        firebaseAuth.signInAnonymously()
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()){
-                            System.out.println("Sign in success");
-                        }
-                        else{
-                            System.out.println("Sign in failed");
-                        }
-                    }
-                });
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        if(item.getItemId() == R.id.menu_sign_out){
+            AuthUI.getInstance().signOut(this).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    Toast.makeText(MainActivity.this, "You have been signed out", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            });
+        }
+        return true;
     }
 }
