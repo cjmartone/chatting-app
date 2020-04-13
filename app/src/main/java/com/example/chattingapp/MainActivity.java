@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -18,6 +19,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -33,118 +35,73 @@ import static com.example.chattingapp.R.drawable.message_sent;
 
 public class MainActivity extends AppCompatActivity {
 
-    private FirebaseAuth firebaseAuth;
     private FirebaseFirestore db;
-
-    private LinearLayout layout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        layout = findViewById(R.id.messageLayout);
-        firebaseAuth = FirebaseAuth.getInstance();
-        signInUser();
+        setContentView(R.layout.home_screen);
 
         db = FirebaseFirestore.getInstance();
-        setListener();
+        startUser();
     }
 
-    public void setListener(){
-        db.collection("friends").addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException e) {
-                if(e != null){
-                    System.out.println("There was an issue listening to the db");
-                    return;
-                }
+    public void createHomeScreen(FirebaseUser currentUser){
+        String uid = currentUser.getUid();
+        LinearLayout friendListLayout = findViewById(R.id.friendListLayout);
+        populateFriendList(friendListLayout, uid);
+    }
 
-                for(QueryDocumentSnapshot doc : value){
-                    ArrayList<String> messages = (ArrayList<String>)doc.getData().get("messages");
-                    ArrayList<Integer> layoutMessages = getMessageIds(layout);
-                    int numMessages = 0;
-                    for(String message : messages){
-                        numMessages ++;
-                        if( ! layoutMessages.contains(createMessageId(numMessages))){
-                            createSentBubble(message, numMessages);
-                        }
+    public void populateFriendList(final LinearLayout layout, String uid){
+        db.collection(uid).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    for(QueryDocumentSnapshot doc : task.getResult()){
+                        TextView view = new TextView(layout.getContext());
+
+                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+
+                        view.setText(doc.getId());
+                        view.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(MainActivity.this, MessagesActivity.class);
+                                startActivity(intent);
+                            }
+                        });
+                        view.setTextColor(Color.BLACK);
+                        view.setTextSize(18);
+                        view.setPadding(20, 10, 20, 10);
+                        view.setLayoutParams(layoutParams);
+
+                        layout.addView(view);
                     }
                 }
             }
         });
     }
 
-    public ArrayList<Integer> getMessageIds(LinearLayout messageLayout){
-        ArrayList<Integer> layoutMessages = new ArrayList<>();
-        int numMessages = messageLayout.getChildCount();
-        for(int i = 0; i < numMessages; i++){
-            layoutMessages.add(messageLayout.getChildAt(i).getId());
+    public void startUser(){
+
+        final FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if(currentUser != null) {
+            createHomeScreen(currentUser);
         }
-
-        return layoutMessages;
-    }
-
-    public void createSentBubble(String message, int id){
-        TextView view = new TextView(layout.getContext());
-
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        layoutParams.weight = 1.0f;
-        layoutParams.gravity = Gravity.BOTTOM|Gravity.RIGHT;
-
-        view.setId(createMessageId(id));
-        view.setText(message);
-        view.setTextColor(Color.WHITE);
-        view.setTextSize(18);
-        view.setBackgroundResource(message_sent);
-        view.setPadding(20, 10, 20, 10);
-        view.setLayoutParams(layoutParams);
-
-        layout.addView(view);
-    }
-
-    public int createMessageId(int id){
-        int sum = 0;
-        char[] message = "message".toCharArray();
-        for(char letter : message){
-            sum += letter;
+        else {
+            firebaseAuth.signInAnonymously()
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                System.out.println("Sign in success");
+                                createHomeScreen(firebaseAuth.getCurrentUser());
+                            } else {
+                                System.out.println("Sign in failed");
+                            }
+                        }
+                    });
         }
-        return sum + id;
-    }
-
-    public void sendMessage(View view){
-        EditText editText = findViewById(R.id.editText);
-        Map<String, String> data = new HashMap<>();
-        data.put("message", editText.getText().toString());
-        db.collection("messages")
-                .add(data)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        System.out.println("Added message");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        System.out.println("Failed to add message");
-                    }
-                });
-        editText.setText("");
-    }
-
-    public void signInUser(){
-        firebaseAuth.signInAnonymously()
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()){
-                            System.out.println("Sign in success");
-                        }
-                        else{
-                            System.out.println("Sign in failed");
-                        }
-                    }
-                });
     }
 }
