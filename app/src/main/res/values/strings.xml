@@ -5,4 +5,6 @@
     <string name="send">Send</string>
     <string name="sign_out">Sign out</string>
     <string name="textview">TextView</string>
+    <string name="add_friend">Add friend</string>
+    <string name="search_for_a_friend">Search for a friend</string>
 </resources>
