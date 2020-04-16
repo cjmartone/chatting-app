@@ -16,12 +16,12 @@ import android.widget.Toast;
 import com.example.chattingapp.Database.DatabaseRepo;
 import com.example.chattingapp.Database.OnDataGetListener;
 import com.example.chattingapp.R;
+import com.example.chattingapp.User;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 
@@ -58,9 +58,9 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == SIGN_IN_REQUEST_CODE){
             if(resultCode == RESULT_OK){
                 Toast.makeText(this, "Successfully signed in. Welcome!", Toast.LENGTH_LONG).show();
-                FirebaseUser newUser = FirebaseAuth.getInstance().getCurrentUser();
-                dbRepo.addUserToDB(newUser);
-                createHomeScreen(newUser);
+                currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                dbRepo.addUserToDB(currentUser);
+                createHomeScreen(currentUser);
             }
             else{
                 Toast.makeText(this, "We couldn't sign you in. Please try again later.", Toast.LENGTH_LONG).show();
@@ -83,10 +83,10 @@ public class MainActivity extends AppCompatActivity {
         dbRepo.getFriends(uid, new OnDataGetListener(){
             @Override
             public void onSuccess(Object data){
-                ArrayList<String> friendIds = (ArrayList<String>)data;
-                for(final String friendId : friendIds){
+                ArrayList<User> friends = (ArrayList<User>)data;
+                for(final User user : friends){
                     TextView view = new TextView(layout.getContext());
-                    view.setText(friendId);
+                    view.setText(user.getDisplayName());
                     view.setTextColor(Color.BLACK);
                     view.setTextSize(18);
                     view.setPadding(20, 10, 20, 10);
@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(View v) {
                             Intent intent = new Intent(MainActivity.this, MessageScreenActivity.class);
-                            intent.putExtra("FRIEND_ID", friendId);
+                            intent.putExtra("FRIEND_ID", user.getUid());
                             startActivity(intent);
                         }
                     });

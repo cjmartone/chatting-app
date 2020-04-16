@@ -30,14 +30,14 @@ public class DatabaseRepo {
     }
 
     public void getFriends(String document, final OnDataGetListener listener){
-        final ArrayList<String> friendIds = new ArrayList<>();
+        final ArrayList<User> friendIds = new ArrayList<>();
         db.collection("Users").document(document).collection("friends").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if(task.isSuccessful() && task.getResult() != null){
                     for(QueryDocumentSnapshot doc : task.getResult()){
                         if(!doc.getId().equals("User Info")) {
-                            friendIds.add(doc.getId());
+                            friendIds.add(new User(doc.getId(), doc.getData().get("Display Name") + ""));
                         }
                     }
                 }
@@ -71,9 +71,9 @@ public class DatabaseRepo {
         });
     }
 
-    public void addFriend(String uid, String friendUid){
+    public void addFriend(String uid, String friendUid, String friendDisplayName){
         Map<String, Object> init = new HashMap<>();
-        init.put("init", "done");
+        init.put("Display Name", friendDisplayName);
         db.collection("Users").document(uid).collection("friends").document(friendUid).set(init);
 
         ChatMessage message = new ChatMessage("This is the beginning of your chat history", "Chat App");

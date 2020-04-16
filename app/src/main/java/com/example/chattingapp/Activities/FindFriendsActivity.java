@@ -60,7 +60,7 @@ public class FindFriendsActivity extends AppCompatActivity {
                             view.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    dbRepo.addFriend(currentUser.getUid(), user.getUid());
+                                    dbRepo.addFriend(currentUser.getUid(), user.getUid(), user.getDisplayName());
                                     Toast.makeText(layout.getContext(),"Added " + user.getDisplayName() + "as a friend.", Toast.LENGTH_LONG).show();
                                 }
                             });
