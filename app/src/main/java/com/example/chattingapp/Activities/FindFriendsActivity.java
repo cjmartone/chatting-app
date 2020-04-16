@@ -1,13 +1,14 @@
 package com.example.chattingapp.Activities;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -60,6 +61,7 @@ public class FindFriendsActivity extends AppCompatActivity {
                                 @Override
                                 public void onClick(View v) {
                                     dbRepo.addFriend(currentUser.getUid(), user.getUid());
+                                    Toast.makeText(layout.getContext(),"Added " + user.getDisplayName() + "as a friend.", Toast.LENGTH_LONG).show();
                                 }
                             });
 
@@ -69,5 +71,13 @@ public class FindFriendsActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    @Override
+    public void onBackPressed(){
+        Intent intent = new Intent();
+        intent.putExtra("result", 1);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 }

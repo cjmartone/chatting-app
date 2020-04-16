@@ -28,7 +28,8 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     private static final int SIGN_IN_REQUEST_CODE = 0;
-    private FirebaseFirestore db;
+    private static final int ADD_FRIEND_REQUEST_CODE = 1;
+    private FirebaseUser currentUser;
     private DatabaseRepo dbRepo;
 
     @Override
@@ -36,13 +37,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_screen);
 
-        db = FirebaseFirestore.getInstance();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
         dbRepo = new DatabaseRepo();
         startUser();
     }
 
     public void startUser(){
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if(currentUser == null){
             startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().build(), SIGN_IN_REQUEST_CODE);
         }
@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Welcome " + currentUser.getDisplayName(), Toast.LENGTH_LONG).show();
             createHomeScreen(currentUser);
         }
-
     }
 
     @Override
@@ -68,11 +67,15 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         }
+        else if(requestCode == ADD_FRIEND_REQUEST_CODE){
+            createHomeScreen(currentUser);
+        }
     }
 
     public void createHomeScreen(FirebaseUser currentUser){
         String uid = currentUser.getUid();
         LinearLayout friendListLayout = findViewById(R.id.friendListLayout);
+        friendListLayout.removeAllViews();
         populateFriendList(friendListLayout, uid);
     }
 
@@ -125,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else if(item.getItemId() == R.id.menu_add_friend){
             Intent intent = new Intent(MainActivity.this, FindFriendsActivity.class);
-            startActivity(intent);
+            startActivityForResult(intent, ADD_FRIEND_REQUEST_CODE);
         }
         return true;
     }
