@@ -1,9 +1,11 @@
 package com.example.chattingapp.Activities;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -48,13 +50,14 @@ public class FindFriendsActivity extends AppCompatActivity {
                     public void onSuccess(Object data){
                         ArrayList<User> users = (ArrayList<User>)data;
                         for(final User user : users){
+                            System.out.println("Activity " + user.getDisplayName());
                             TextView view = new TextView(layout.getContext());
                             view.setText(user.getDisplayName());
                             view.setTextColor(Color.BLACK);
                             view.setTextSize(18);
                             view.setPadding(20, 10, 20, 10);
 
-                            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+                            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                             view.setLayoutParams(layoutParams);
 
                             view.setOnClickListener(new View.OnClickListener() {

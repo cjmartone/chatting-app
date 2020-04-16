@@ -63,6 +63,7 @@ public class DatabaseRepo {
                         displayName = doc.getData().get("Display Name") + "";
                         if(displayName.toLowerCase().contains(user.toLowerCase())) {
                             match.add(new User(doc.getId(), displayName));
+                            System.out.println("DB " + displayName);
                         }
                     }
                 }
