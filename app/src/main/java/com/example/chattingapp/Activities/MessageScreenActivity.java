@@ -1,6 +1,9 @@
 package com.example.chattingapp.Activities;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chattingapp.ChatMessage;
 import com.example.chattingapp.Database.DatabaseRepo;
+import com.example.chattingapp.Database.OnDataGetListener;
 import com.example.chattingapp.R;
 import com.example.chattingapp.RecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
@@ -27,6 +31,7 @@ public class MessageScreenActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private DatabaseRepo dbRepo;
     private RecyclerAdapter adapter;
+    private static final int RESULT_LOAD_IMAGE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -39,6 +44,7 @@ public class MessageScreenActivity extends AppCompatActivity {
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         setNewMessageListener(currentUser.getUid());
 
+        addGalleryButtonListener();
         addSendButtonListener();
     }
 
@@ -67,6 +73,35 @@ public class MessageScreenActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == RESULT_LOAD_IMAGE){
+            if(resultCode == RESULT_OK && data != null){
+                Uri selectedImage = data.getData();
+                dbRepo.uploadImage(selectedImage, FirebaseAuth.getInstance().getCurrentUser(), getIntent().getStringExtra("FRIEND_ID"), new OnDataGetListener() {
+                    @Override
+                    public void onSuccess(Object data) {
+                        Toast.makeText(MessageScreenActivity.this, "Image uploaded", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }
+
+    }
+
+    public void addGalleryButtonListener(){
+        Button openGalleryButton = findViewById(R.id.openGalleryButton);
+        openGalleryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(galleryIntent, RESULT_LOAD_IMAGE);
+            }
+        });
+    }
+
     public void addSendButtonListener(){
         Button sendButton = findViewById(R.id.sendButton);
         sendButton.setOnClickListener(new View.OnClickListener() {
@@ -77,7 +112,8 @@ public class MessageScreenActivity extends AppCompatActivity {
 
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                 String friendId = getIntent().getStringExtra("FRIEND_ID");
-                dbRepo.postMessage(currentUser.getUid(), friendId, input.getText().toString(), currentUser.getDisplayName());
+                dbRepo.postMessage(currentUser.getUid(), friendId, input.getText().toString(), currentUser.getDisplayName(), null);
+
                 input.setText("");
             }
         });

@@ -1,8 +1,10 @@
 package com.example.chattingapp;
 
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -10,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.squareup.picasso.Picasso;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -26,6 +29,12 @@ public class RecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessage, Recyc
 
     @Override
     protected void onBindViewHolder(ChatMessageHolder holder, int i, ChatMessage chatMessage) {
+        if(chatMessage.getUrl() != null) {
+            Picasso.get().load(chatMessage.getUrl()).into(holder.image);
+        }
+        else{
+            holder.image.setImageDrawable(null);
+        }
         holder.messageText.setText(chatMessage.getMessageText());
         holder.messageUser.setText(chatMessage.getMessageUser());
 
@@ -47,6 +56,7 @@ public class RecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessage, Recyc
     class ChatMessageHolder extends RecyclerView.ViewHolder{
         TextView messageText;
         TextView messageUser;
+        ImageView image;
         TextView timestamp;
 
         public ChatMessageHolder(View itemView){
@@ -54,6 +64,7 @@ public class RecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessage, Recyc
 
             messageText = itemView.findViewById(R.id.message_text);
             messageUser = itemView.findViewById(R.id.message_user);
+            image = itemView.findViewById(R.id.image);
             timestamp = itemView.findViewById(R.id.message_time);
         }
     }
