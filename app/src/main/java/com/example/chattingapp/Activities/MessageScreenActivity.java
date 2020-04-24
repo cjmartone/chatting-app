@@ -37,7 +37,7 @@ public class MessageScreenActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.messages_screen);
+        setContentView(R.layout.conversation);
 
         db = FirebaseFirestore.getInstance();
         dbRepo = new DatabaseRepo();

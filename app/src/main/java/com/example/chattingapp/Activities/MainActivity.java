@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         dbRepo = new DatabaseRepo();
         startUser();
+        addSearchForFriendsOnClick();
     }
 
     public void startUser(){
@@ -48,26 +49,6 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
             Toast.makeText(this, "Welcome " + currentUser.getDisplayName(), Toast.LENGTH_LONG).show();
-            createHomeScreen(currentUser);
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == SIGN_IN_REQUEST_CODE){
-            if(resultCode == RESULT_OK){
-                Toast.makeText(this, "Successfully signed in. Welcome!", Toast.LENGTH_LONG).show();
-                currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                dbRepo.addUserToDB(currentUser);
-                createHomeScreen(currentUser);
-            }
-            else{
-                Toast.makeText(this, "We couldn't sign you in. Please try again later.", Toast.LENGTH_LONG).show();
-                finish();
-            }
-        }
-        else if(requestCode == ADD_FRIEND_REQUEST_CODE){
             createHomeScreen(currentUser);
         }
     }
@@ -110,6 +91,16 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void addSearchForFriendsOnClick(){
+        findViewById(R.id.add_friends).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, FindFriendsActivity.class);
+                startActivityForResult(intent, ADD_FRIEND_REQUEST_CODE);
+            }
+        });
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -127,10 +118,26 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-        else if(item.getItemId() == R.id.menu_add_friend){
-            Intent intent = new Intent(MainActivity.this, FindFriendsActivity.class);
-            startActivityForResult(intent, ADD_FRIEND_REQUEST_CODE);
-        }
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == SIGN_IN_REQUEST_CODE){
+            if(resultCode == RESULT_OK){
+                Toast.makeText(this, "Successfully signed in. Welcome!", Toast.LENGTH_LONG).show();
+                currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                dbRepo.addUserToDB(currentUser);
+                createHomeScreen(currentUser);
+            }
+            else{
+                Toast.makeText(this, "We couldn't sign you in. Please try again later.", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+        else if(requestCode == ADD_FRIEND_REQUEST_CODE){
+            createHomeScreen(currentUser);
+        }
     }
 }
