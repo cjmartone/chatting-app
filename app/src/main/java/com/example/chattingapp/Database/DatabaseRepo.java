@@ -1,18 +1,15 @@
 package com.example.chattingapp.Database;
 
 import android.net.Uri;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.chattingapp.Activities.MessageScreenActivity;
 import com.example.chattingapp.ChatMessage;
 import com.example.chattingapp.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -96,27 +93,44 @@ public class DatabaseRepo {
         init.put("Display Name", friendName);
         db.collection("Users").document(currentUid).collection("friends").document(friendUid).set(init);
 
-        ChatMessage message = new ChatMessage("This is the beginning of your chat history", "Chat App", null);
+        ChatMessage message = new ChatMessage("This is the beginning of your chat history", "Chat App", null, null);
         db.collection("Users").document(currentUid).collection("friends").document(friendUid).collection("messages").add(message);
 
         Map<String, Object> initFriend = new HashMap<>();
         init.put("Display Name", currentName);
         db.collection("Users").document(friendUid).collection("friends").document(currentUid).set(init);
 
-        ChatMessage friendMessage = new ChatMessage("This is the beginning of your chat history", "Chat App", null);
+        ChatMessage friendMessage = new ChatMessage("This is the beginning of your chat history", "Chat App", null, null);
         db.collection("Users").document(friendUid).collection("friends").document(currentUid).collection("messages").add(message);
     }
 
-    public void uploadImage(Uri image, final FirebaseUser user, final String friendId, final OnDataGetListener listener){
+    public void uploadFile(Uri image, String child, final FirebaseUser user, final String friendId, final OnDataGetListener listener){
         final String imageId = UUID.randomUUID().toString();
-        StorageReference imageRef = storageReference.child("images/" + imageId);
+        StorageReference imageRef = storageReference.child(child + imageId);
         imageRef.putFile(image).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        postMessage(user.getUid(), friendId, new ChatMessage("", user.getDisplayName(), uri.toString()));
+                        postMessage(user.getUid(), friendId, new ChatMessage("", user.getDisplayName(), uri.toString(), null));
+                        listener.onSuccess("Complete");
+                    }
+                });
+            }
+        });
+    }
+
+    public void uploadAudio(Uri audio, final FirebaseUser user, final String friendId, final OnDataGetListener listener){
+        final String imageId = UUID.randomUUID().toString();
+        StorageReference imageRef = storageReference.child("audio/" + imageId);
+        imageRef.putFile(audio).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        postMessage(user.getUid(), friendId, new ChatMessage("", user.getDisplayName(), null, uri.toString()));
                         listener.onSuccess("Complete");
                     }
                 });

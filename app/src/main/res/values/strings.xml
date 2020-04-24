@@ -8,4 +8,5 @@
     <string name="add_friend">Add friend</string>
     <string name="search_for_a_friend">Search for a friend</string>
     <string name="db_images">DB images</string>
+    <string name="play_audio">Play audio</string>
 </resources>

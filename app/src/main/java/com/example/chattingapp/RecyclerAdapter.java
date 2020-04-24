@@ -1,9 +1,10 @@
 package com.example.chattingapp;
 
-import android.net.Uri;
+import android.media.MediaPlayer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -14,6 +15,7 @@ import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -28,13 +30,39 @@ public class RecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessage, Recyc
     }
 
     @Override
-    protected void onBindViewHolder(ChatMessageHolder holder, int i, ChatMessage chatMessage) {
-        if(chatMessage.getUrl() != null) {
-            Picasso.get().load(chatMessage.getUrl()).into(holder.image);
+    protected void onBindViewHolder(ChatMessageHolder holder, int i, final ChatMessage chatMessage) {
+        if(chatMessage.getImage() != null) {
+            Picasso.get().load(chatMessage.getImage()).into(holder.image);
         }
         else{
             holder.image.setImageDrawable(null);
         }
+
+        if(chatMessage.getAudio() != null){
+            holder.audioPlayer.setText(R.string.play_audio);
+            holder.audioPlayer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    MediaPlayer mediaPlayer = new MediaPlayer();
+                    try {
+                        mediaPlayer.setDataSource(chatMessage.getAudio());
+                        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                            @Override
+                            public void onPrepared(MediaPlayer mp) {
+                                mp.start();
+                            }
+                        });
+                        mediaPlayer.prepare();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+        else{
+            holder.audioPlayer.setVisibility(View.GONE);
+        }
+
         holder.messageText.setText(chatMessage.getMessageText());
         holder.messageUser.setText(chatMessage.getMessageUser());
 
@@ -57,6 +85,7 @@ public class RecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessage, Recyc
         TextView messageText;
         TextView messageUser;
         ImageView image;
+        Button audioPlayer;
         TextView timestamp;
 
         public ChatMessageHolder(View itemView){
@@ -65,6 +94,7 @@ public class RecyclerAdapter extends FirestoreRecyclerAdapter<ChatMessage, Recyc
             messageText = itemView.findViewById(R.id.message_text);
             messageUser = itemView.findViewById(R.id.message_user);
             image = itemView.findViewById(R.id.image);
+            audioPlayer = itemView.findViewById(R.id.audio_player_button);
             timestamp = itemView.findViewById(R.id.message_time);
         }
     }
