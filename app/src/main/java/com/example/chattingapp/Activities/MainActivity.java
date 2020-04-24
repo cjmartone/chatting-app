@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
     public void populateFriendList(final LinearLayout layout, String uid){
         dbRepo.getFriends(uid, new OnDataGetListener(){
             @Override
-            public void onSuccess(Object data){
+            public ArrayList<User> onSuccess(Object data){
                 ArrayList<User> friends = (ArrayList<User>)data;
                 for(final User user : friends){
                     TextView view = new TextView(layout.getContext());
@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
                     layout.addView(view);
                 }
+                return friends;
             }
         });
     }

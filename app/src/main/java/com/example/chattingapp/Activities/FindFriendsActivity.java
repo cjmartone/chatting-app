@@ -1,11 +1,9 @@
 package com.example.chattingapp.Activities;
 
-import android.app.ActionBar;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -45,9 +43,10 @@ public class FindFriendsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 EditText searchFriendText = findViewById(R.id.search_friend_text);
-                dbRepo.searchUsers(searchFriendText.getText().toString(), new OnDataGetListener(){
+
+                dbRepo.searchUsersFor(searchFriendText.getText().toString(), new OnDataGetListener(){
                     @Override
-                    public void onSuccess(Object data){
+                    public ArrayList<User> onSuccess(Object data){
                         ArrayList<User> users = (ArrayList<User>)data;
                         for(final User user : users){
                             System.out.println("Activity " + user.getDisplayName());
@@ -63,13 +62,14 @@ public class FindFriendsActivity extends AppCompatActivity {
                             view.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    dbRepo.addFriend(currentUser.getUid(), user.getUid(), user.getDisplayName());
-                                    Toast.makeText(layout.getContext(),"Added " + user.getDisplayName() + "as a friend.", Toast.LENGTH_LONG).show();
+                                    dbRepo.addFriend(new User(currentUser), user);
+                                    Toast.makeText(layout.getContext(),"Added " + user.getDisplayName() + " as a friend.", Toast.LENGTH_LONG).show();
                                 }
                             });
 
                             layout.addView(view);
                         }
+                        return users;
                     }
                 });
             }

@@ -1,5 +1,7 @@
 package com.example.chattingapp;
 
+import com.google.firebase.auth.FirebaseUser;
+
 public class User {
     private String uid;
     private String displayName;
@@ -7,6 +9,11 @@ public class User {
     public User(String uid, String displayName){
         this.uid = uid;
         this.displayName = displayName;
+    }
+
+    public User(FirebaseUser user){
+        uid = user.getUid();
+        displayName = user.getDisplayName();
     }
 
     public String getUid(){

@@ -9,7 +9,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,12 +18,14 @@ import com.example.chattingapp.Database.DatabaseRepo;
 import com.example.chattingapp.Database.OnDataGetListener;
 import com.example.chattingapp.R;
 import com.example.chattingapp.RecyclerAdapter;
+import com.example.chattingapp.User;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+
+import java.util.ArrayList;
 
 public class MessageScreenActivity extends AppCompatActivity {
 
@@ -82,8 +83,9 @@ public class MessageScreenActivity extends AppCompatActivity {
                 Uri selectedImage = data.getData();
                 dbRepo.uploadImage(selectedImage, FirebaseAuth.getInstance().getCurrentUser(), getIntent().getStringExtra("FRIEND_ID"), new OnDataGetListener() {
                     @Override
-                    public void onSuccess(Object data) {
+                    public ArrayList<User> onSuccess(Object data) {
                         Toast.makeText(MessageScreenActivity.this, "Image uploaded", Toast.LENGTH_SHORT).show();
+                        return null;
                     }
                 });
             }
@@ -112,7 +114,7 @@ public class MessageScreenActivity extends AppCompatActivity {
 
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                 String friendId = getIntent().getStringExtra("FRIEND_ID");
-                dbRepo.postMessage(currentUser.getUid(), friendId, input.getText().toString(), currentUser.getDisplayName(), null);
+                dbRepo.postMessage(currentUser.getUid(), friendId, new ChatMessage(input.getText().toString(), currentUser.getDisplayName(), null));
 
                 input.setText("");
             }
