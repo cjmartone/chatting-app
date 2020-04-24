@@ -58,12 +58,14 @@ public class DatabaseRepo {
         });
     }
 
-    public void postMessage(String uid, String friendId, String message, String user, String url){
+    public void postMessage(String uid, String friendId, ChatMessage message){
         db.collection("Users").document(uid).collection("friends").document(friendId).collection("messages")
-                .add(new ChatMessage(message, user, url));
+                .add(message);
+        db.collection("Users").document(friendId).collection("friends").document(uid).collection("messages")
+                .add(message);
     }
 
-    public void searchUsers(final String user, final OnDataGetListener listener){
+    public void searchUsersFor(final String user, final OnDataGetListener listener){
         final ArrayList<User> match = new ArrayList<>();
         db.collection("Users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
 
@@ -84,13 +86,25 @@ public class DatabaseRepo {
         });
     }
 
-    public void addFriend(String uid, String friendUid, String friendDisplayName){
+    public void addFriend(User currentUser, User friend){
+        String currentName = currentUser.getDisplayName();
+        String friendName = friend.getDisplayName();
+        String currentUid = currentUser.getUid();
+        String friendUid = friend.getUid();
+
         Map<String, Object> init = new HashMap<>();
-        init.put("Display Name", friendDisplayName);
-        db.collection("Users").document(uid).collection("friends").document(friendUid).set(init);
+        init.put("Display Name", friendName);
+        db.collection("Users").document(currentUid).collection("friends").document(friendUid).set(init);
 
         ChatMessage message = new ChatMessage("This is the beginning of your chat history", "Chat App", null);
-        db.collection("Users").document(uid).collection("friends").document(friendUid).collection("messages").add(message);
+        db.collection("Users").document(currentUid).collection("friends").document(friendUid).collection("messages").add(message);
+
+        Map<String, Object> initFriend = new HashMap<>();
+        init.put("Display Name", currentName);
+        db.collection("Users").document(friendUid).collection("friends").document(currentUid).set(init);
+
+        ChatMessage friendMessage = new ChatMessage("This is the beginning of your chat history", "Chat App", null);
+        db.collection("Users").document(friendUid).collection("friends").document(currentUid).collection("messages").add(message);
     }
 
     public void uploadImage(Uri image, final FirebaseUser user, final String friendId, final OnDataGetListener listener){
@@ -102,7 +116,7 @@ public class DatabaseRepo {
                 taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        postMessage(user.getUid(), friendId, "", user.getDisplayName(), uri.toString());
+                        postMessage(user.getUid(), friendId, new ChatMessage("", user.getDisplayName(), uri.toString()));
                         listener.onSuccess("Complete");
                     }
                 });
