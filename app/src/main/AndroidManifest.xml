@@ -22,9 +22,12 @@
         <activity
             android:windowSoftInputMode="adjustPan"
             android:name=".Activities.FindFriendsActivity"></activity>
+        <activity android:name=".Activities.RecordActivity"></activity>
     </application>
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
 </manifest>

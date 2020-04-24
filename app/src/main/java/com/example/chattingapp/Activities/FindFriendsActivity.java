@@ -46,7 +46,7 @@ public class FindFriendsActivity extends AppCompatActivity {
 
                 dbRepo.searchUsersFor(searchFriendText.getText().toString(), new OnDataGetListener(){
                     @Override
-                    public ArrayList<User> onSuccess(Object data){
+                    public void onSuccess(Object data){
                         ArrayList<User> users = (ArrayList<User>)data;
                         for(final User user : users){
                             System.out.println("Activity " + user.getDisplayName());
@@ -69,7 +69,6 @@ public class FindFriendsActivity extends AppCompatActivity {
 
                             layout.addView(view);
                         }
-                        return users;
                     }
                 });
             }

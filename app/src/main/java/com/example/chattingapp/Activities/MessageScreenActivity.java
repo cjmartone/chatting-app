@@ -31,7 +31,10 @@ public class MessageScreenActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
     private DatabaseRepo dbRepo;
+
     private RecyclerAdapter adapter;
+
+    private String friendId;
     private static final int RESULT_LOAD_IMAGE = 2;
 
     @Override
@@ -43,9 +46,13 @@ public class MessageScreenActivity extends AppCompatActivity {
         dbRepo = new DatabaseRepo();
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+
+        friendId = getIntent().getStringExtra("FRIEND_ID");
+
         setNewMessageListener(currentUser.getUid());
 
         addGalleryButtonListener();
+        addRecordButtonListener();
         addSendButtonListener();
     }
 
@@ -62,7 +69,7 @@ public class MessageScreenActivity extends AppCompatActivity {
     }
 
     public void setNewMessageListener(String uid){
-        Query query = db.collection("Users").document(uid).collection("friends").document(getIntent().getStringExtra("FRIEND_ID")).collection("messages").orderBy("messageTime");
+        Query query = db.collection("Users").document(uid).collection("friends").document(friendId).collection("messages").orderBy("messageTime");
         FirestoreRecyclerOptions<ChatMessage> options = new FirestoreRecyclerOptions.Builder<ChatMessage>()
                 .setQuery(query, ChatMessage.class)
                 .build();
@@ -81,11 +88,10 @@ public class MessageScreenActivity extends AppCompatActivity {
         if(requestCode == RESULT_LOAD_IMAGE){
             if(resultCode == RESULT_OK && data != null){
                 Uri selectedImage = data.getData();
-                dbRepo.uploadImage(selectedImage, FirebaseAuth.getInstance().getCurrentUser(), getIntent().getStringExtra("FRIEND_ID"), new OnDataGetListener() {
+                dbRepo.uploadFile(selectedImage, "images/", FirebaseAuth.getInstance().getCurrentUser(), friendId, new OnDataGetListener() {
                     @Override
-                    public ArrayList<User> onSuccess(Object data) {
+                    public void onSuccess(Object data) {
                         Toast.makeText(MessageScreenActivity.this, "Image uploaded", Toast.LENGTH_SHORT).show();
-                        return null;
                     }
                 });
             }
@@ -104,6 +110,18 @@ public class MessageScreenActivity extends AppCompatActivity {
         });
     }
 
+    public void addRecordButtonListener(){
+        Button openRecordButton = findViewById(R.id.open_record_button);
+        openRecordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MessageScreenActivity.this, RecordActivity.class);
+                intent.putExtra("FRIEND_ID", friendId);
+                startActivity(intent);
+            }
+        });
+    }
+
     public void addSendButtonListener(){
         Button sendButton = findViewById(R.id.sendButton);
         sendButton.setOnClickListener(new View.OnClickListener() {
@@ -113,8 +131,7 @@ public class MessageScreenActivity extends AppCompatActivity {
                 EditText input = findViewById(R.id.input);
 
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                String friendId = getIntent().getStringExtra("FRIEND_ID");
-                dbRepo.postMessage(currentUser.getUid(), friendId, new ChatMessage(input.getText().toString(), currentUser.getDisplayName(), null));
+                dbRepo.postMessage(currentUser.getUid(), friendId, new ChatMessage(input.getText().toString(), currentUser.getDisplayName(), null, null));
 
                 input.setText("");
             }
