@@ -1,5 +1,7 @@
 package com.example.chattingapp;
 
+import android.net.Uri;
+
 import com.google.firebase.firestore.ServerTimestamp;
 
 import java.util.Date;
@@ -8,12 +10,14 @@ public class ChatMessage {
 
     private String messageText;
     private String messageUser;
+    private String url;
     @ServerTimestamp
     private Date messageTime;
 
-    public ChatMessage(String text, String user){
+    public ChatMessage(String text, String user, String url){
         messageText = text;
         messageUser = user;
+        this.url = url;
     }
 
     public ChatMessage(){}
@@ -32,6 +36,14 @@ public class ChatMessage {
 
     public void setMessageUser(String messageUser) {
         this.messageUser = messageUser;
+    }
+
+    public String getUrl(){
+        return url;
+    }
+
+    public void setUrl(String url){
+        this.url = url;
     }
 
     public Date getMessageTime(){
