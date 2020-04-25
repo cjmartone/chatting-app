@@ -6,8 +6,6 @@ import android.content.pm.PackageManager;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -19,8 +17,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.chattingapp.Database.DatabaseRepo;
-import com.example.chattingapp.Database.OnDataGetListener;
+import com.example.chattingapp.Database.DatabaseRepository;
+import com.example.chattingapp.Database.OnDataCompleteListener;
 import com.example.chattingapp.R;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -38,7 +36,7 @@ public class RecordActivity  extends AppCompatActivity {
     private MediaRecorder mRecorder;
     private String mFileName;
 
-    private DatabaseRepo dbRepo;
+    private DatabaseRepository dbRepo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +48,7 @@ public class RecordActivity  extends AppCompatActivity {
 
         mFileName = getApplicationContext().getFilesDir().getPath() + "/recorded_audio.3gp";
 
-        dbRepo = new DatabaseRepo();
+        dbRepo = new DatabaseRepository();
 
         requestAudioPermissions();
         setRecordButtonListener();
@@ -86,7 +84,7 @@ public class RecordActivity  extends AppCompatActivity {
                         send.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                dbRepo.uploadAudio(Uri.fromFile(new File(mFileName)), FirebaseAuth.getInstance().getCurrentUser(), getIntent().getStringExtra("FRIEND_ID"), new OnDataGetListener() {
+                                dbRepo.uploadAudio(Uri.fromFile(new File(mFileName)), FirebaseAuth.getInstance().getCurrentUser(), getIntent().getStringExtra("FRIEND_ID"), new OnDataCompleteListener() {
                                     @Override
                                     public void onSuccess(Object data) {
                                         onBackPressed();

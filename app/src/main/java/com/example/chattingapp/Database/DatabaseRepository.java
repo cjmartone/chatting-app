@@ -4,8 +4,8 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.example.chattingapp.ChatMessage;
-import com.example.chattingapp.User;
+import com.example.chattingapp.DTO.ChatMessage;
+import com.example.chattingapp.DTO.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -22,12 +22,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class DatabaseRepo {
+public class DatabaseRepository {
 
     private FirebaseFirestore db;
     private StorageReference storageReference;
 
-    public DatabaseRepo(){
+    public DatabaseRepository(){
         db = FirebaseFirestore.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference();
     }
@@ -38,9 +38,9 @@ public class DatabaseRepo {
         db.collection("Users").document(user.getUid()).set(userInfo);
     }
 
-    public void getFriends(String document, final OnDataGetListener listener){
+    public void getFriends(String uid, final OnDataCompleteListener listener){
         final ArrayList<User> friendIds = new ArrayList<>();
-        db.collection("Users").document(document).collection("friends").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        db.collection("Users").document(uid).collection("friends").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if(task.isSuccessful() && task.getResult() != null){
@@ -62,7 +62,7 @@ public class DatabaseRepo {
                 .add(message);
     }
 
-    public void searchUsersFor(final String user, final OnDataGetListener listener){
+    public void searchUsersFor(final String user, final OnDataCompleteListener listener){
         final ArrayList<User> match = new ArrayList<>();
         db.collection("Users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
 
@@ -104,7 +104,7 @@ public class DatabaseRepo {
         db.collection("Users").document(friendUid).collection("friends").document(currentUid).collection("messages").add(message);
     }
 
-    public void uploadFile(Uri image, String child, final FirebaseUser user, final String friendId, final OnDataGetListener listener){
+    public void uploadFile(Uri image, String child, final FirebaseUser user, final String friendId, final OnDataCompleteListener listener){
         final String imageId = UUID.randomUUID().toString();
         StorageReference imageRef = storageReference.child(child + imageId);
         imageRef.putFile(image).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -121,7 +121,7 @@ public class DatabaseRepo {
         });
     }
 
-    public void uploadAudio(Uri audio, final FirebaseUser user, final String friendId, final OnDataGetListener listener){
+    public void uploadAudio(Uri audio, final FirebaseUser user, final String friendId, final OnDataCompleteListener listener){
         final String imageId = UUID.randomUUID().toString();
         StorageReference imageRef = storageReference.child("audio/" + imageId);
         imageRef.putFile(audio).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {

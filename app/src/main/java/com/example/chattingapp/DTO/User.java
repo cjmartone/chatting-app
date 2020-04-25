@@ -1,4 +1,4 @@
-package com.example.chattingapp;
+package com.example.chattingapp.DTO;
 
 import com.google.firebase.auth.FirebaseUser;
 

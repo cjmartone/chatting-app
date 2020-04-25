@@ -13,10 +13,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.chattingapp.Database.DatabaseRepo;
-import com.example.chattingapp.Database.OnDataGetListener;
+import com.example.chattingapp.Database.DatabaseRepository;
+import com.example.chattingapp.Database.OnDataCompleteListener;
 import com.example.chattingapp.R;
-import com.example.chattingapp.User;
+import com.example.chattingapp.DTO.User;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int SIGN_IN_REQUEST_CODE = 0;
     private static final int ADD_FRIEND_REQUEST_CODE = 1;
     private FirebaseUser currentUser;
-    private DatabaseRepo dbRepo;
+    private DatabaseRepository dbRepo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.home_screen);
 
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        dbRepo = new DatabaseRepo();
+        dbRepo = new DatabaseRepository();
         startUser();
         addSearchForFriendsOnClick();
     }
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void populateFriendList(final LinearLayout layout, String uid){
-        dbRepo.getFriends(uid, new OnDataGetListener(){
+        dbRepo.getFriends(uid, new OnDataCompleteListener(){
             @Override
             public void onSuccess(Object data){
                 ArrayList<User> friends = (ArrayList<User>)data;

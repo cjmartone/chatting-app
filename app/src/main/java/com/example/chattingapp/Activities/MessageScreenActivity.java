@@ -13,24 +13,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.chattingapp.ChatMessage;
-import com.example.chattingapp.Database.DatabaseRepo;
-import com.example.chattingapp.Database.OnDataGetListener;
+import com.example.chattingapp.DTO.ChatMessage;
+import com.example.chattingapp.Database.DatabaseRepository;
+import com.example.chattingapp.Database.OnDataCompleteListener;
 import com.example.chattingapp.R;
 import com.example.chattingapp.RecyclerAdapter;
-import com.example.chattingapp.User;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
-import java.util.ArrayList;
-
 public class MessageScreenActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
-    private DatabaseRepo dbRepo;
+    private DatabaseRepository dbRepo;
 
     private RecyclerAdapter adapter;
 
@@ -43,7 +40,7 @@ public class MessageScreenActivity extends AppCompatActivity {
         setContentView(R.layout.conversation);
 
         db = FirebaseFirestore.getInstance();
-        dbRepo = new DatabaseRepo();
+        dbRepo = new DatabaseRepository();
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 
@@ -88,7 +85,7 @@ public class MessageScreenActivity extends AppCompatActivity {
         if(requestCode == RESULT_LOAD_IMAGE){
             if(resultCode == RESULT_OK && data != null){
                 Uri selectedImage = data.getData();
-                dbRepo.uploadFile(selectedImage, "images/", FirebaseAuth.getInstance().getCurrentUser(), friendId, new OnDataGetListener() {
+                dbRepo.uploadFile(selectedImage, "images/", FirebaseAuth.getInstance().getCurrentUser(), friendId, new OnDataCompleteListener() {
                     @Override
                     public void onSuccess(Object data) {
                         Toast.makeText(MessageScreenActivity.this, "Image uploaded", Toast.LENGTH_SHORT).show();
