@@ -151,12 +151,15 @@ public class MessageScreenActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                EditText input = findViewById(R.id.input);
+                final EditText input = findViewById(R.id.input);
 
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                dbRepo.postMessage(currentUser.getUid(), friendId, new ChatMessage(input.getText().toString(), currentUser.getDisplayName(), null, null));
-
-                input.setText("");
+                dbRepo.postMessage(currentUser.getUid(), friendId, new ChatMessage(input.getText().toString(), currentUser.getDisplayName(), null, null), new OnDataCompleteListener() {
+                    @Override
+                    public void onSuccess(Object data) {
+                        input.setText("");
+                    }
+                });
             }
         });
     }

@@ -10,6 +10,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -65,11 +66,16 @@ public class DatabaseRepository {
         });
     }
 
-    public void postMessage(String uid, String friendId, ChatMessage message){
+    public void postMessage(String uid, String friendId, ChatMessage message, final OnDataCompleteListener listener){
         db.collection("Users").document(uid).collection("friends").document(friendId).collection("messages")
                 .add(message);
         db.collection("Users").document(friendId).collection("friends").document(uid).collection("messages")
-                .add(message);
+                .add(message).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                listener.onSuccess("Complete");
+            }
+        });
     }
 
     public void searchUsersFor(final String user, final OnDataCompleteListener listener){
@@ -123,8 +129,12 @@ public class DatabaseRepository {
                 taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        postMessage(user.getUid(), friendId, new ChatMessage("", user.getDisplayName(), uri.toString(), null));
-                        listener.onSuccess("Complete");
+                        postMessage(user.getUid(), friendId, new ChatMessage("", user.getDisplayName(), uri.toString(), null), new OnDataCompleteListener() {
+                            @Override
+                            public void onSuccess(Object data) {
+                                listener.onSuccess("Complete");
+                            }
+                        });
                     }
                 });
             }
@@ -140,8 +150,12 @@ public class DatabaseRepository {
                 taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        postMessage(user.getUid(), friendId, new ChatMessage("", user.getDisplayName(), null, uri.toString()));
-                        listener.onSuccess("Complete");
+                        postMessage(user.getUid(), friendId, new ChatMessage("", user.getDisplayName(), null, uri.toString()), new OnDataCompleteListener() {
+                            @Override
+                            public void onSuccess(Object data) {
+                                listener.onSuccess("Complete");
+                            }
+                        });
                     }
                 });
             }
