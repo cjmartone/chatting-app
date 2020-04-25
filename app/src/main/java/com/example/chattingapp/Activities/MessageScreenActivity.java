@@ -4,9 +4,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chattingapp.DTO.ChatMessage;
+import com.example.chattingapp.DTO.User;
 import com.example.chattingapp.Database.DatabaseRepository;
 import com.example.chattingapp.Database.OnDataCompleteListener;
 import com.example.chattingapp.R;
@@ -30,7 +34,10 @@ public class MessageScreenActivity extends AppCompatActivity {
     private DatabaseRepository dbRepo;
 
     private RecyclerAdapter adapter;
+    private LinearLayoutManager layoutManager;
+    private RecyclerView recyclerView;
 
+    private User currentUser;
     private String friendId;
     private static final int RESULT_LOAD_IMAGE = 2;
 
@@ -41,16 +48,18 @@ public class MessageScreenActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
         dbRepo = new DatabaseRepository();
-        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 
+        currentUser = new User(FirebaseAuth.getInstance().getCurrentUser());
         friendId = getIntent().getStringExtra("FRIEND_ID");
 
         setNewMessageListener(currentUser.getUid());
 
+        setFriendNameLabel();
         addGalleryButtonListener();
         addRecordButtonListener();
         addSendButtonListener();
+
+        recyclerView.smoothScrollToPosition(adapter.getItemCount());
     }
 
     @Override
@@ -72,9 +81,17 @@ public class MessageScreenActivity extends AppCompatActivity {
                 .build();
 
         adapter = new RecyclerAdapter(options);
-        RecyclerView recyclerView = findViewById(R.id.message_view);
+        recyclerView = findViewById(R.id.message_view);
+        layoutManager = new LinearLayoutManager(this);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(layoutManager);
+
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                layoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount());
+            }
+        });
         recyclerView.setAdapter(adapter);
     }
 
@@ -85,7 +102,7 @@ public class MessageScreenActivity extends AppCompatActivity {
         if(requestCode == RESULT_LOAD_IMAGE){
             if(resultCode == RESULT_OK && data != null){
                 Uri selectedImage = data.getData();
-                dbRepo.uploadFile(selectedImage, "images/", FirebaseAuth.getInstance().getCurrentUser(), friendId, new OnDataCompleteListener() {
+                dbRepo.uploadImage(selectedImage, "images/", FirebaseAuth.getInstance().getCurrentUser(), friendId, new OnDataCompleteListener() {
                     @Override
                     public void onSuccess(Object data) {
                         Toast.makeText(MessageScreenActivity.this, "Image uploaded", Toast.LENGTH_SHORT).show();
@@ -93,7 +110,16 @@ public class MessageScreenActivity extends AppCompatActivity {
                 });
             }
         }
+    }
 
+    public void setFriendNameLabel(){
+        final TextView view = findViewById(R.id.friendNameLabel);
+        dbRepo.getUserName(friendId, new OnDataCompleteListener() {
+            @Override
+            public void onSuccess(Object data) {
+                view.setText(data.toString());
+            }
+        });
     }
 
     public void addGalleryButtonListener(){
@@ -133,5 +159,33 @@ public class MessageScreenActivity extends AppCompatActivity {
                 input.setText("");
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.friend_settings, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        if(item.getItemId() == R.id.remove_friend){
+            dbRepo.removeFriend(currentUser, friendId, new OnDataCompleteListener() {
+                @Override
+                public void onSuccess(Object data) {
+                    Toast.makeText(MessageScreenActivity.this, "Removed Friend", Toast.LENGTH_LONG).show();
+                    onBackPressed();
+                }
+            });
+        }
+        return true;
+    }
+
+    @Override
+    public void onBackPressed(){
+        Intent intent = new Intent();
+        intent.putExtra("result", 1);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 }

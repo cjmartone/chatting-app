@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int SIGN_IN_REQUEST_CODE = 0;
     private static final int ADD_FRIEND_REQUEST_CODE = 1;
+    private static final int REMOVE_FRIEND_REQUEST_CODE = 10;
     private FirebaseUser currentUser;
     private DatabaseRepository dbRepo;
 
@@ -80,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onClick(View v) {
                             Intent intent = new Intent(MainActivity.this, MessageScreenActivity.class);
                             intent.putExtra("FRIEND_ID", user.getUid());
-                            startActivity(intent);
+                            startActivityForResult(intent, REMOVE_FRIEND_REQUEST_CODE);
                         }
                     });
 
@@ -136,6 +137,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         else if(requestCode == ADD_FRIEND_REQUEST_CODE){
+            createHomeScreen(currentUser);
+        }
+        else if(requestCode == REMOVE_FRIEND_REQUEST_CODE){
             createHomeScreen(currentUser);
         }
     }

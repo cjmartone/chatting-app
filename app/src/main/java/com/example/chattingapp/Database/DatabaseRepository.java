@@ -10,6 +10,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -36,6 +37,15 @@ public class DatabaseRepository {
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("Display Name", user.getDisplayName());
         db.collection("Users").document(user.getUid()).set(userInfo);
+    }
+
+    public void getUserName(String uid, final OnDataCompleteListener listener){
+        db.collection("Users").document(uid).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                listener.onSuccess(documentSnapshot.getData().get("Display Name"));
+            }
+        });
     }
 
     public void getFriends(String uid, final OnDataCompleteListener listener){
@@ -104,7 +114,7 @@ public class DatabaseRepository {
         db.collection("Users").document(friendUid).collection("friends").document(currentUid).collection("messages").add(message);
     }
 
-    public void uploadFile(Uri image, String child, final FirebaseUser user, final String friendId, final OnDataCompleteListener listener){
+    public void uploadImage(Uri image, String child, final FirebaseUser user, final String friendId, final OnDataCompleteListener listener){
         final String imageId = UUID.randomUUID().toString();
         StorageReference imageRef = storageReference.child(child + imageId);
         imageRef.putFile(image).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -134,6 +144,15 @@ public class DatabaseRepository {
                         listener.onSuccess("Complete");
                     }
                 });
+            }
+        });
+    }
+
+    public void removeFriend(User currentUser, String friendId, final OnDataCompleteListener listener){
+        db.collection("Users").document(currentUser.getUid()).collection("friends").document(friendId).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                listener.onSuccess("Removed");
             }
         });
     }

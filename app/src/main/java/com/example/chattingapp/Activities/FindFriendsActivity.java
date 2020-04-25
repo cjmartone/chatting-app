@@ -3,6 +3,8 @@ package com.example.chattingapp.Activities;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -10,12 +12,16 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.chattingapp.Database.DatabaseRepository;
 import com.example.chattingapp.Database.OnDataCompleteListener;
 import com.example.chattingapp.R;
 import com.example.chattingapp.DTO.User;
+import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -33,7 +39,6 @@ public class FindFriendsActivity extends AppCompatActivity {
 
         dbRepo = new DatabaseRepository();
         friendIds = getFriendIds();
-
         LinearLayout layout = findViewById(R.id.search_friend_list);
         addSearchForFriendButtonListener(layout);
     }
@@ -81,6 +86,7 @@ public class FindFriendsActivity extends AppCompatActivity {
                             String userId = user.getUid();
                             if(!userId.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) && !friendIds.contains(userId)) {
                                 usersAdded++;
+                                friendIds.add(userId);
                                 TextView view = new TextView(layout.getContext());
                                 view.setText(user.getDisplayName());
                                 view.setTextColor(Color.BLACK);
