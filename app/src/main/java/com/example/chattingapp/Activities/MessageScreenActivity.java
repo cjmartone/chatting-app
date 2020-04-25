@@ -4,36 +4,40 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.chattingapp.ChatMessage;
-import com.example.chattingapp.Database.DatabaseRepo;
-import com.example.chattingapp.Database.OnDataGetListener;
+import com.example.chattingapp.DTO.ChatMessage;
+import com.example.chattingapp.DTO.User;
+import com.example.chattingapp.Database.DatabaseRepository;
+import com.example.chattingapp.Database.OnDataCompleteListener;
 import com.example.chattingapp.R;
 import com.example.chattingapp.RecyclerAdapter;
-import com.example.chattingapp.User;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
-import java.util.ArrayList;
-
 public class MessageScreenActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
-    private DatabaseRepo dbRepo;
+    private DatabaseRepository dbRepo;
 
     private RecyclerAdapter adapter;
+    private LinearLayoutManager layoutManager;
+    private RecyclerView recyclerView;
 
+    private User currentUser;
     private String friendId;
     private static final int RESULT_LOAD_IMAGE = 2;
 
@@ -43,17 +47,19 @@ public class MessageScreenActivity extends AppCompatActivity {
         setContentView(R.layout.conversation);
 
         db = FirebaseFirestore.getInstance();
-        dbRepo = new DatabaseRepo();
-        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        dbRepo = new DatabaseRepository();
 
+        currentUser = new User(FirebaseAuth.getInstance().getCurrentUser());
         friendId = getIntent().getStringExtra("FRIEND_ID");
 
         setNewMessageListener(currentUser.getUid());
 
+        setFriendNameLabel();
         addGalleryButtonListener();
         addRecordButtonListener();
         addSendButtonListener();
+
+        recyclerView.smoothScrollToPosition(adapter.getItemCount());
     }
 
     @Override
@@ -75,9 +81,17 @@ public class MessageScreenActivity extends AppCompatActivity {
                 .build();
 
         adapter = new RecyclerAdapter(options);
-        RecyclerView recyclerView = findViewById(R.id.message_view);
+        recyclerView = findViewById(R.id.message_view);
+        layoutManager = new LinearLayoutManager(this);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(layoutManager);
+
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                layoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount());
+            }
+        });
         recyclerView.setAdapter(adapter);
     }
 
@@ -88,7 +102,7 @@ public class MessageScreenActivity extends AppCompatActivity {
         if(requestCode == RESULT_LOAD_IMAGE){
             if(resultCode == RESULT_OK && data != null){
                 Uri selectedImage = data.getData();
-                dbRepo.uploadFile(selectedImage, "images/", FirebaseAuth.getInstance().getCurrentUser(), friendId, new OnDataGetListener() {
+                dbRepo.uploadImage(selectedImage, "images/", FirebaseAuth.getInstance().getCurrentUser(), friendId, new OnDataCompleteListener() {
                     @Override
                     public void onSuccess(Object data) {
                         Toast.makeText(MessageScreenActivity.this, "Image uploaded", Toast.LENGTH_SHORT).show();
@@ -96,7 +110,16 @@ public class MessageScreenActivity extends AppCompatActivity {
                 });
             }
         }
+    }
 
+    public void setFriendNameLabel(){
+        final TextView view = findViewById(R.id.friendNameLabel);
+        dbRepo.getUserName(friendId, new OnDataCompleteListener() {
+            @Override
+            public void onSuccess(Object data) {
+                view.setText(data.toString());
+            }
+        });
     }
 
     public void addGalleryButtonListener(){
@@ -128,13 +151,44 @@ public class MessageScreenActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                EditText input = findViewById(R.id.input);
+                final EditText input = findViewById(R.id.input);
 
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                dbRepo.postMessage(currentUser.getUid(), friendId, new ChatMessage(input.getText().toString(), currentUser.getDisplayName(), null, null));
-
-                input.setText("");
+                dbRepo.postMessage(currentUser.getUid(), friendId, new ChatMessage(input.getText().toString(), currentUser.getDisplayName(), null, null), new OnDataCompleteListener() {
+                    @Override
+                    public void onSuccess(Object data) {
+                        input.setText("");
+                    }
+                });
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.friend_settings, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        if(item.getItemId() == R.id.remove_friend){
+            dbRepo.removeFriend(currentUser, friendId, new OnDataCompleteListener() {
+                @Override
+                public void onSuccess(Object data) {
+                    Toast.makeText(MessageScreenActivity.this, "Removed Friend", Toast.LENGTH_LONG).show();
+                    onBackPressed();
+                }
+            });
+        }
+        return true;
+    }
+
+    @Override
+    public void onBackPressed(){
+        Intent intent = new Intent();
+        intent.putExtra("result", 1);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 }

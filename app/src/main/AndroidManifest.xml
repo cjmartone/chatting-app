@@ -17,10 +17,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:windowSoftInputMode="adjustPan"
             android:name=".Activities.MessageScreenActivity"></activity>
         <activity
-            android:windowSoftInputMode="adjustPan"
             android:name=".Activities.FindFriendsActivity"></activity>
         <activity android:name=".Activities.RecordActivity"></activity>
     </application>

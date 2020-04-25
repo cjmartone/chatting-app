@@ -1,5 +1,5 @@
 package com.example.chattingapp.Database;
 
-public interface OnDataGetListener {
+public interface OnDataCompleteListener {
     void onSuccess(Object data);
 }
